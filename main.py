@@ -1,7 +1,7 @@
 import nltk
 import urllib2
 import csv 
-from string import Template, ascii_uppercase
+import string 
 import subprocess
 import os
 
@@ -10,8 +10,6 @@ legislators = {}
 influence_url = "http://influenceexplorer.com/search?query="
 call_url = "http://www.callcongressnow.org/profile/"
 party_url = "http://politicalpartytime.org/pol/"
-reddit_username = os.environ['HOUND_NAME'] if 'HOUND_NAME' in os.environ else "WOW"
-reddit_password = os.environ['HOUND_PASSWORD'] if 'HOUND_PASSWORD' in os.environ else "SUCH DEMOCRACY"
 commit = subprocess.check_output(["git","rev-parse","HEAD"])[:-1]
 
 class Legislator:
@@ -32,7 +30,7 @@ def get_raw(url):
     return nltk.clean_html(urllib2.urlopen(url).read())
 
 def CQ(word):
-    return word[0] in ascii_uppercase
+    return word[0] in string.ascii_uppercase
 
 def find_legislators(string):
     mentioned = []
@@ -44,15 +42,8 @@ def find_legislators(string):
           mentioned.append(legislators[tn+tf])
     return list(set(mentioned))
 
-
-def legislator_urls(l):
-    infl = influence_url+l['firstname']+"+"+l['lastname']
-    call = call_url+l['bioguide_id']    
-    poli = party_url+l['crp_id']    
-    return (infl,call,poli)
-
 intro = """
-Hiya! I'm a bot that hunts for members of Congress in stories. Here is some information about the folks I think I found. 
+Hiya! I'm a bot that hunts for members of Congress in stories and finds information about them. 
 """
 
 footer = """
@@ -73,7 +64,7 @@ I depend heavily on projects built by the [Sunlight Foundation](http://sunlightf
 
 ----------------------
 
-I am an [open source](http://github.com) bot. This comment was generated from commit [7dbd10d](http://github.com).
+I am an [open source](https://github.com/zmaril/CongressionalHound) bot. This comment was generated from commit [{0}](https://github.com/zmaril/CongressionalHound/tree/{1}).
 """
 
 def link(text,href):
@@ -82,7 +73,6 @@ def link(text,href):
 def basic(victims):
     str = """
 ###Basic Information 
-"Who the hell are these people?"
 
 | Full Name | Gender | Nickname | Birthdate | Party | Title |
 |:--:|:-:|:-:|:-:|:-:|:-:|
@@ -97,7 +87,6 @@ def basic(victims):
 def contact(victims):
     str = """
 ###Contact Information
-"How come you never call me anymore?"
 
 | Name | Contact Form | [Phone](http://www.callcongressnow.org/)|  Twitter | Facebook | Youtube |  Address | 
 |:-:|:-:|:-:|:-:|:-:|:-:|:-:|
@@ -117,8 +106,7 @@ def contact(victims):
 def further(victims):
     str = """
 ###Further Information
-"We need to go deeper."
-                                                                                                                                                     
+                                                                                                                           
 | Name | Website | [Open Congress](http://www.opencongress.org/) | [Influence Explorer](http://influenceexplorer.com/) | [Party Time](http://politicalpartytime.org/) |
 |:-:|:-:|:-:|:-:|:-:|            
 """
@@ -138,8 +126,23 @@ def generate_comment(url):
         return None
     else:
         str = basic(victims)+contact(victims)+further(victims)
-        str = intro+str+footer
+        str = intro+str+footer.format(commit[0:10],commit)
         return str
 
+import praw
 
 
+username = os.environ['HOUND_NAME'] if 'HOUND_NAME' in os.environ else "WOW"
+password = os.environ['HOUND_PASSWORD'] if 'HOUND_PASSWORD' in os.environ else "SUCH DEMOCRACY"
+r = praw.Reddit(user_agent="Congressional Hound")
+r.login(username=username,password=password)
+
+subs = ["CongressionalHound"]
+def crawl_reddit():
+    for sub in subs:
+        for submission in r.get_subreddit(sub).get_new(limit=10):
+            comment = generate_comment(submission.url)
+            submission.add_comment(comment)
+
+if __name__ == "__main__":
+    crawl_reddit()
