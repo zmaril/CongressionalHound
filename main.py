@@ -22,9 +22,10 @@ class Legislator:
 
 with open("legislators.csv","rb") as csvfile:
     for l in csv.DictReader(csvfile):
-        legislators[l['firstname']+l['lastname']]=Legislator(l)
-        if l['nickname'] != '':
-            legislators[l['nickname']+l['lastname']]=Legislator(l)
+        if l['lastname'] != "Obama":
+            legislators[l['firstname']+l['lastname']]=Legislator(l)
+            if l['nickname'] != '':
+                legislators[l['nickname']+l['lastname']]=Legislator(l)
 
 def get_raw(url):
     return nltk.clean_html(urllib2.urlopen(url).read())
@@ -50,7 +51,7 @@ footer = """
 Context for links:
 
 * "Website" is the legislators main website.
-* "Contact from" is the member of Congress' official contact form.  
+* "Contact form" is the member of Congress' official contact form.  
 * "Open Congress" provides a wealth of general information, including vote history, funding, and videos. 
 * "Influence Explorer" dives deep into campaign finance and provides fascinating data about lobbying.       
 * "Party Time" aggregates information concerning fundraising events for legislators. 
@@ -58,7 +59,7 @@ Context for links:
                                                                                                                                                      
 -----------------------                                                                                                                              
 
-Did I make a mistake?  Please PM /u/ErlenmeyerSpace or tweet [@ZackMaril](https://twitter.com/zackmaril) with any suggestions, complaints, or concerns. Please do not PM me, I don't read your messages! 
+Did I make a mistake?  Please PM /u/ErlenmeyerSpace or tweet [@ZackMaril](https://twitter.com/zackmaril) with any suggestions, complaints, or concerns.
 
 I depend heavily on projects built by the [Sunlight Foundation](http://sunlightfoundation.com/). They do awesome work; please consider [donating to them](http://sunlightfoundation.com/join/).  If you are interested in supporting my development and maintenance, please use [gittip](https://www.gittip.com/ZackMaril/).    
 
@@ -68,7 +69,10 @@ I am an [open source](https://github.com/zmaril/CongressionalHound) bot. This co
 """
 
 def link(text,href):
-    return "[{0}]({1})".format(text,href)
+    if href == None or href == "":
+        return "N/A"
+    else:
+        return "[{0}]({1})".format(text,href)
 
 def basic(victims):
     str = """
@@ -130,7 +134,8 @@ def generate_comment(url):
         return str
 
 import praw
-
+import time
+import pickle
 
 username = os.environ['HOUND_NAME'] if 'HOUND_NAME' in os.environ else "WOW"
 password = os.environ['HOUND_PASSWORD'] if 'HOUND_PASSWORD' in os.environ else "SUCH DEMOCRACY"
@@ -138,11 +143,35 @@ r = praw.Reddit(user_agent="Congressional Hound")
 r.login(username=username,password=password)
 
 subs = ["CongressionalHound"]
+
+try:
+    with open("stories"):
+        print "Pickle exists"
+except IOError:
+    print "Creating pickle"
+    file("stories", 'w').close()
+    pickle.dump([],open("stories","r+"))
+    print "Pickle Created"
+
+already_done = []
+
 def crawl_reddit():
-    for sub in subs:
-        for submission in r.get_subreddit(sub).get_new(limit=10):
-            comment = generate_comment(submission.url)
-            submission.add_comment(comment)
+    while True:
+        print "Awake "+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) 
+        already_done=pickle.load(open("stories","r+"))
+        for sub in subs:
+            for submission in r.get_subreddit(sub).get_new(limit=10):
+                if submission.id not in already_done:
+                    print "New story: "+submission.id
+                    already_done.append(submission.id)
+                    comment = generate_comment(submission.url)
+                    if comment is not None:
+                        print "Found congressmen! Commenting on "+submission.id
+                        submission.add_comment(comment)
+                  
+        pickle.dump(already_done,open("stories","r+"))
+        print "Asleep"
+        time.sleep(30)
 
 if __name__ == "__main__":
     crawl_reddit()
