@@ -100,8 +100,12 @@ def contact(victims):
         props = [d['lastname']]
         props.append(link("link",d['webform']))
         props.append(link(d['phone'],"http://www.callcongressnow.org/profile/"+d['bioguide_id']))
-        props.append(link("@"+d['twitter_id'],"http://www.twitter.com/"+d['twitter_id']))
-        props.append(link("link","http://www.facebook.com/"+d['facebook_id']))
+        if d['twitter_id'] != "":
+            props.append(link("@"+d['twitter_id'],"http://www.twitter.com/"+d['twitter_id'])) 
+        if d['facebook_id'] != "":
+            props.append(link("link","http://www.facebook.com/"+d['facebook_id'])) 
+
+
         props.append(link("link",d['youtube_url']))
         props.append(d['congress_office'])
         str += "|"+"|".join(props)+"|\n"
@@ -166,7 +170,7 @@ def crawl_reddit():
                     already_done.append(submission.id)
                     comment = generate_comment(submission.url)
                     if comment is not None:
-                        print "Found congressmen! Commenting on "+submission.id
+                        print "Found congressfolk! Commenting on "+submission.id
                         submission.add_comment(comment)
                   
         pickle.dump(already_done,open("stories","r+"))
