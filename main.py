@@ -59,13 +59,15 @@ Context for links:
                                                                                                                                                      
 -----------------------                                                                                                                              
 
-Did I make a mistake?  Please PM /u/ErlenmeyerSpace or tweet [@ZackMaril](https://twitter.com/zackmaril) with any suggestions, complaints, or concerns.
+Did I make a mistake?  Please PM me or tweet [@ZackMaril](https://twitter.com/zackmaril) with any suggestions, complaints, or concerns.
 
-I depend heavily on projects built by the [Sunlight Foundation](http://sunlightfoundation.com/). They do awesome work; please consider [donating to them](http://sunlightfoundation.com/join/).  If you are interested in supporting my development and maintenance, please use [gittip](https://www.gittip.com/ZackMaril/).    
+------------------------
+
+I depend heavily on projects built by the [Sunlight Foundation](http://sunlightfoundation.com/). They do awesome work; please consider [donating to them](http://sunlightfoundation.com/join/).  If you are interested in supporting my development and maintenance, please [consider using gittip](https://www.gittip.com/ZackMaril/).    
 
 ----------------------
 
-I am an [open source](https://github.com/zmaril/CongressionalHound) bot. This comment was generated from commit [{0}](https://github.com/zmaril/CongressionalHound/tree/{1}).
+I am an [open source](https://github.com/zmaril/CongressionalHound) bot. This comment was generated from commit [{0}](https://github.com/zmaril/CongressionalHound/tree/{1}). I only run on subreddits where I am invited or have received permission to operate in. If you are mod and want me to show up in your subreddit, just PM me and I'll be there soon. If you are a user of a particular subreddit, PM your mods and tell them to get in touch. 
 """
 
 def link(text,href):
@@ -102,9 +104,12 @@ def contact(victims):
         props.append(link(d['phone'],"http://www.callcongressnow.org/profile/"+d['bioguide_id']))
         if d['twitter_id'] != "":
             props.append(link("@"+d['twitter_id'],"http://www.twitter.com/"+d['twitter_id'])) 
+        else:
+            props.append("N/A")
         if d['facebook_id'] != "":
             props.append(link("link","http://www.facebook.com/"+d['facebook_id'])) 
-
+        else:
+            props.append("N/A")
 
         props.append(link("link",d['youtube_url']))
         props.append(d['congress_office'])
@@ -146,7 +151,7 @@ password = os.environ['HOUND_PASSWORD'] if 'HOUND_PASSWORD' in os.environ else "
 r = praw.Reddit(user_agent="Congressional Hound")
 r.login(username=username,password=password)
 
-subs = ["CongressionalHound"]
+subs = ["CongressionalHound","AnythingGoesNews"]
 
 try:
     with open("stories"):
@@ -164,7 +169,7 @@ def crawl_reddit():
         print "Awake "+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) 
         already_done=pickle.load(open("stories","r+"))
         for sub in subs:
-            for submission in r.get_subreddit(sub).get_new(limit=10):
+            for submission in r.get_subreddit(sub).get_new(limit=50):
                 if submission.id not in already_done:
                     print "New story: "+submission.id
                     already_done.append(submission.id)
