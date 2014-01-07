@@ -1,7 +1,7 @@
 import nltk, urllib2, praw, time, pickle, os 
 
 from legislators import find_legislators
-from comment     import generate_comment
+from comment     import add_single_comment, add_multiple_comments, MAX_SINGLE
 from util        import log, unescape
 
 username = os.environ['HOUND_NAME'] if 'HOUND_NAME' in os.environ else "WOW"
@@ -27,9 +27,8 @@ def get_raw(url):
     str = nltk.clean_html(str)
     return str.decode("utf-8")
 
-already_done = []
-
 def crawl_reddit():
+    already_done = []
     while True:
         already_done=pickle.load(open("stories","r+"))
         for sub in subs:
@@ -41,14 +40,21 @@ def crawl_reddit():
                     raw = get_raw(submission.url)+" "+submission.title+" "+submission.selftext
                     victims = find_legislators(raw)
                     if len(victims) is not 0:
-                        log("Found {0} congressfolk!".format(len(victims)))
-                        submission.add_comment(generate_comment(victims))
-                        log("Added comment")
+                        log("Found {0} congressfolk!".format(len(victims)))                        
+                        if len(victims) < MAX_SINGLE: 
+                            add_single_comment(submission,victims)
+                            log("Added comment")
+                        else:
+                            add_multiple_comments(submission,victims)
+                            log("Added multiple comments")
                     pickle.dump(already_done,open("stories","r+"))
        #TODO make pickle filter out anything over an hour old or
        #something?  Or make it only look back for the last 30 seconds
-       #of information?
+       #of posts?
         time.sleep(30)
+
+#TODO look for words like congress, senate, republican, government,
+#anythign to avoid misidentifying 
 
 if __name__ == "__main__":
     crawl_reddit()

@@ -4,6 +4,8 @@ import string
 
 legislators = {}
 
+nope = ["Obama","Clinton"]
+
 class Legislator:
     def __init__(self,dict):
         self.d=dict 
@@ -14,7 +16,7 @@ class Legislator:
 
 with open("legislators.csv","rb") as csvfile:
     for l in csv.DictReader(csvfile):
-        if l['lastname'] != "Obama":
+        if l['lastname'] not in nope:
             legislators[l['firstname']+l['lastname']]=Legislator(l)
             if l['nickname'] != '':
                 legislators[l['nickname']+l['lastname']]=Legislator(l)
