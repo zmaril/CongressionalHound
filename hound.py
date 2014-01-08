@@ -28,7 +28,7 @@ except IOError:
 
 def get_raw(url):    
     ending = url[-4:]
-    if ending in [".png",".jpg"]:
+    if ending in [".png",".jpg",".pdf"]:
         return ""
     try:
         query = urllib.urlencode({'token':token,'url':url})        
