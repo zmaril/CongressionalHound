@@ -1,6 +1,6 @@
 import subprocess 
 from math import ceil
-
+from util import handle_ratelimit
 influence_url = "http://influenceexplorer.com/search?query="
 call_url = "http://www.callcongressnow.org/profile/"
 party_url = "http://politicalpartytime.org/pol/"
@@ -104,7 +104,7 @@ MAX_DISPLAY=17
 def add_single_comment(submission,victims):
     str = basic(victims)+contact(victims)+further(victims)
     str = intro+str+footer.format(commit[0:MAX_SINGLE],commit)
-    return submission.add_comment(str)
+    return handle_ratelimit(submission.add_comment,str)
 
 contd = """
 (cont'd)
@@ -115,5 +115,5 @@ def add_multiple_comments(submission,victims):
     for i in range(1,int(ceil(len(victims)/float(MAX_DISPLAY)))):
         v = victims[MAX_DISPLAY*i:MAX_DISPLAY*(i+1)]
         str = contd+basic(v)+contact(v)+further(v)
-        comment.reply(str)
+        handle_ratelimt(comment.reply,str)
     return comment

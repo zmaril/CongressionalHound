@@ -1,15 +1,17 @@
-import nltk, urllib2, praw, time, pickle, os 
+import nltk, urllib2, praw, time, pickle, os, argparse, httplib, gzip
 
 from legislators import find_legislators
 from comment     import add_single_comment, add_multiple_comments, MAX_SINGLE
-from util        import log, unescape
+from util        import log, unescape, fail, warn, success
+from StringIO import StringIO
+
 
 username = os.environ['HOUND_NAME'] if 'HOUND_NAME' in os.environ else "WOW"
 password = os.environ['HOUND_PASSWORD'] if 'HOUND_PASSWORD' in os.environ else "SUCH DEMOCRACY"
 r = praw.Reddit(user_agent="Congressional Hound")
 r.login(username=username,password=password)
 
-subs = ["CongressionalHound"]
+subs = ["CongressionalHunting"]
 
 try:
     with open("stories"):
@@ -21,11 +23,25 @@ except IOError:
     print "Pickle Created"
 
 def get_raw(url):    
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor)
-    req = urllib2.Request(unescape(url),headers={'User-Agent':'Mozilla/5.0'})
-    str = opener.open(req).read()
-    str = nltk.clean_html(str)
-    return str.decode("utf-8")
+    try:
+        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor)
+        req = urllib2.Request(unescape(url),headers={'User-Agent':'Mozilla/5.0'})
+        response = opener.open(req)
+        str = ""
+        if response.info().get('Content-Encoding') == 'gzip':
+            buf = StringIO(response.read())
+            f = gzip.GzipFile(fileobj=buf)
+            str = f.read()
+        else:
+            str = response.read()
+        str = nltk.clean_html(str)
+        return str.decode("utf-8")
+    except urllib2.HTTPError as e:
+        fail("HTTP EXCEPTION:",e.code,e.reason,url)
+        return ""
+    except httplib.BadStatusLine as e:
+        fail("BAD STATUS EXCEPTION",url)
+        return ""
 
 def crawl_reddit():
     already_done = []
@@ -40,13 +56,13 @@ def crawl_reddit():
                     raw = get_raw(submission.url)+" "+submission.title+" "+submission.selftext
                     victims = find_legislators(raw)
                     if len(victims) is not 0:
-                        log("Found {0} congressfolk!".format(len(victims)))                        
+                        success("Found {0} congressfolk!".format(len(victims)))                        
                         if len(victims) < MAX_SINGLE: 
                             add_single_comment(submission,victims)
-                            log("Added comment")
+                            success("Added comment")
                         else:
                             add_multiple_comments(submission,victims)
-                            log("Added multiple comments")
+                            success("Added multiple comments")
                     pickle.dump(already_done,open("stories","r+"))
        #TODO make pickle filter out anything over an hour old or
        #something?  Or make it only look back for the last 30 seconds
@@ -55,6 +71,16 @@ def crawl_reddit():
 
 #TODO look for words like congress, senate, republican, government,
 #anythign to avoid misidentifying 
+#TODO delete comments with -1 karma automatically
+
+parser = argparse.ArgumentParser(description='Hunt some Congressfolk.')
+parser.add_argument('--production', action='store_true')
+args = parser.parse_args()
+
+if args.production:
+    warn("RUNNING IN PRODUCTION")
+    subs.append("AnythingGoesNews")
+    warn("ON THESE SUBREDDITS: {0}".format(subs))
 
 if __name__ == "__main__":
     crawl_reddit()

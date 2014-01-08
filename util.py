@@ -1,4 +1,4 @@
-import re, htmlentitydefs, time
+import re, htmlentitydefs, time, praw
 
 ##
 # Removes HTML or XML character references and entities from a text string. http://effbot.org/zone/re-sub.htm#unescape-html
@@ -27,6 +27,31 @@ def unescape(text):
         return text # leave as is
     return re.sub("&#?\w+;", fixup, text)
 
-def log(arg):
+def formatted(*args):
     now = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()) 
-    print "["+now+"] "+arg
+    return "["+now+"] "+" ".join(map(str,args))
+
+
+def log(*args):    
+    print apply(formatted,args)
+
+def fail(*args):
+    print '\033[91m'+apply(formatted,args)+'\033[0m'
+
+def warn(*args):
+    print '\033[93m'+apply(formatted,args)+'\033[0m'
+
+def success(*args):
+    print '\033[92m'+apply(formatted,args)+'\033[0m'
+
+def handle_ratelimit(func, *args, **kwargs):
+    while True:
+        try:
+            func(*args, **kwargs)
+            break
+        except praw.errors.RateLimitExceeded as error:
+            warn('\tSleeping for %d seconds' % error.sleep_time)
+            time.sleep(error.sleep_time)
+        except Exception as e:
+            fail(func,args,e)
+            break
