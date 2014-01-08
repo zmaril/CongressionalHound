@@ -1,13 +1,17 @@
-import nltk, urllib2, praw, time, pickle, os, argparse, httplib, gzip
+import nltk, urllib2, praw, time, pickle, os, argparse
+import httplib, json, urllib
 
 from legislators import find_legislators
 from comment     import add_single_comment, add_multiple_comments, MAX_SINGLE
 from util        import log, unescape, fail, warn, success
 from StringIO import StringIO
 
+#Set your environmental variables fool. 
+username = os.environ['HOUND_NAME']
+password = os.environ['HOUND_PASSWORD']
+token = os.environ['READABILITY_TOKEN']
+readability = "https://www.readability.com/api/content/v1/parser"
 
-username = os.environ['HOUND_NAME'] if 'HOUND_NAME' in os.environ else "WOW"
-password = os.environ['HOUND_PASSWORD'] if 'HOUND_PASSWORD' in os.environ else "SUCH DEMOCRACY"
 r = praw.Reddit(user_agent="Congressional Hound")
 r.login(username=username,password=password)
 
@@ -23,19 +27,14 @@ except IOError:
     print "Pickle Created"
 
 def get_raw(url):    
+    ending = url[-4:]
+    if ending in [".png",".jpg"]:
+        return ""
     try:
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor)
-        req = urllib2.Request(unescape(url),headers={'User-Agent':'Mozilla/5.0'})
-        response = opener.open(req)
-        str = ""
-        if response.info().get('Content-Encoding') == 'gzip':
-            buf = StringIO(response.read())
-            f = gzip.GzipFile(fileobj=buf)
-            str = f.read()
-        else:
-            str = response.read()
+        query = urllib.urlencode({'token':token,'url':url})        
+        str = json.load(urllib2.urlopen(readability+"?"+query))['content']
         str = nltk.clean_html(str)
-        return str.decode("utf-8")
+        return str
     except urllib2.HTTPError as e:
         fail("HTTP EXCEPTION:",e.code,e.reason,url)
         return ""
@@ -71,8 +70,7 @@ def crawl_reddit():
 
 #TODO look for words like congress, senate, republican, government,
 #anythign to avoid misidentifying 
-#TODO delete comments with -1 karma automatically
-
+#TODO Rewrite the comment to point to the subreddit wiki
 parser = argparse.ArgumentParser(description='Hunt some Congressfolk.')
 parser.add_argument('--production', action='store_true')
 args = parser.parse_args()

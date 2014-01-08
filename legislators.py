@@ -23,6 +23,7 @@ def CQ(word):
     return word[0] in string.ascii_uppercase
 
 def find_legislators(string):
+    #TODO Mark S. Kirk doesn't hit. Filter out tokens that are 1/2 long? 
     mentioned = []
     tokens = nltk.word_tokenize(string)
     for i in range(0,len(tokens)-1):
@@ -30,4 +31,5 @@ def find_legislators(string):
         tf = tokens[i+1]
         if CQ(tn) and CQ(tf) and tn+tf in legislators:
           mentioned.append(legislators[tn+tf])
-    return list(set(mentioned))
+    uniqued = list(set(mentioned))
+    return sorted(uniqued,key=lambda x: x.d['lastname'])
