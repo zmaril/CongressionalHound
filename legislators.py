@@ -16,7 +16,7 @@ class Legislator:
 #differeniate between him and the economist effectively.
 with open("legislators.csv","rb") as csvfile:
     for l in csv.DictReader(csvfile):
-        if l['in_office'] == '1':
+        if l['in_office'] == '1' and not (l['firstname'] == "Adam" and l['lastname'] == "Smith"):
             legislators[l['firstname']+l['lastname']]=Legislator(l)
             if l['nickname'] != '':
                 legislators[l['nickname']+l['lastname']]=Legislator(l)
