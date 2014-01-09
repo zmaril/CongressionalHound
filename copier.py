@@ -8,7 +8,7 @@ r.login(username=username,password=password)
 
 subs = []
 with open("politicalsubs.txt") as f:
-    subs = f.read().splitlines()
+    subs = sorted(f.read().splitlines())
 
 h = "CongressionalHunting"
 
@@ -30,10 +30,12 @@ def copy_subs():
                 if s.id not in already_done:
                     already_done.append(s.id)
                     log("Submitting new story from {1}: {0}".format(s.short_link,sub))
+                    t = "From /r/"+sub+":"+s.title
+                    t = t[0:300]
                     if len(s.selftext) is not 0:
-                        handle_ratelimit(r.submit,h,s.title,text=s.selftext)
+                        handle_ratelimit(r.submit,h,t,text=s.selftext)
                     elif len(s.url) is not 0: 
-                        handle_ratelimit(r.submit,h,s.title,url=s.url)
+                        handle_ratelimit(r.submit,h,t,url=s.url)
                     pickle.dump(already_done,open("copied","r+"))
 
 

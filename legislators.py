@@ -22,10 +22,9 @@ with open("legislators.csv","rb") as csvfile:
 def CQ(word):
     return word[0] in string.ascii_uppercase
 
-def find_legislators(string):
+def find_legislators(tokens):
     #TODO Mark S. Kirk doesn't hit. Filter out tokens that are 1/2 long? 
     mentioned = []
-    tokens = nltk.word_tokenize(string)
     for i in range(0,len(tokens)-1):
         tn = tokens[i]
         tf = tokens[i+1]
