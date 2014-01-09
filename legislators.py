@@ -12,6 +12,8 @@ class Legislator:
     def __str__(self):
         return "Legislator: "+self.d['firstname']+self.d['lastname']
 
+#TODO Remove Adam Smith and document him on the wiki. No idea how to
+#differeniate between him and the economist effectively.
 with open("legislators.csv","rb") as csvfile:
     for l in csv.DictReader(csvfile):
         if l['in_office'] == '1':

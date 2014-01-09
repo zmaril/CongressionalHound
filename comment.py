@@ -11,27 +11,13 @@ intro = """
 """
 
 footer = """
----------------------
-Context for links:
-
-* "Website" is the legislators main website.
-* "Contact form" is the member of Congress' official contact form.  
-* "Open Congress" provides a wealth of general information, including vote history, funding, and videos.
-* "Influence Explorer" dives deep into campaign finance and provides fascinating data about lobbying.
-* "Party Time" aggregates information concerning fundraising events for legislators.
-* "Call Congress Now" (the phone link) turns your browser into a phone for free and let's you call the D.C. office for a member of Congress.
-
------------------------
-
-^(Did I make a mistake?  Please PM me or tweet) [^@ZackMaril](https://twitter.com/zackmaril) ^(with any suggestions, complaints, or concerns).
-
-------------------------
-
-^(I depend heavily on projects built by the) [^Sunlight ^Foundation](http://sunlightfoundation.com/). ^(They do awesome work; please consider) [^donating ^to ^them](http://sunlightfoundation.com/join/)^(.  If you are interested in supporting my development and maintenance, please) [^consider ^using ^gittip](https://www.gittip.com/ZackMaril/)^.
-
 ----------------------
 
-^(I am an) [^open ^source](https://github.com/zmaril/CongressionalHound) ^(bot. This comment was generated from commit) [^{0}](https://github.com/zmaril/CongressionalHound/tree/{1})^(. I only run on subreddits where I am invited or have received permission to operate in. If you are mod and want me to show up in your subreddit, just PM me and I'll be there soon. If you are a user of a particular subreddit, PM your mods and tell them to get in touch.)
+[???](http://reddit.com/r/CongressionalHound/wiki)
+[@@@](http://www.twitter.com/ZackMaril)
+[$$$](http://www.reddit.com/r/CongressionalHound/wiki/index#wiki_are_you_going_to_earn_money_from_this_bot.3F)
+[!!!](http://www.reddit.com/r/CongressionalHound/wiki/index#wiki_why_does_the_bot_keep_talking_about_ron_paul.2C_that_one_electrician_from_kentucky.3F)
+[{0}](https://github.com/zmaril/CongressionalHound/tree/{1})
 """
 
 
@@ -45,13 +31,18 @@ def basic(victims):
     str = """
 ###Basic Information 
 
-| Full Name | Gender | Nickname | Birthdate | Party | Title |
-|:--:|:-:|:-:|:-:|:-:|:-:|
+| Name | Gender | Birthdate | Party | Title | Website | [Open Congress](http://www.opencongress.org/) | [Influence Explorer](http://influenceexplorer.com/) | [Party Time](http://politicalpartytime.org/) |
+|:--:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 """
     for v in victims:
-        d = v.d 
-        name = d['firstname']+" "+d['lastname']
-        props = [name,d['gender'],d['nickname'],d['birthdate'],d['party'],d['title']]
+        d = v.d
+        fname = d['nickname'] if d['nickname'] != '' else d['firstname']
+        name = fname+" "+d['lastname']
+        props = [name,d['gender'],d['birthdate'],d['party'],d['title']]
+        props.append(link("link",d['website']))
+        props.append(link("link",d['congresspedia_url']))
+        props.append(link("link","http://influenceexplorer.com/search?query="+d['firstname']+"+"+d['lastname']))
+        props.append(link("link","http://politicalpartytime.org/pol/"+d['crp_id']))
         str += "|"+"|".join(props)+"|\n"
     return str
     
@@ -81,28 +72,11 @@ def contact(victims):
         str += "|"+"|".join(props)+"|\n"
     return str
 
-def further(victims):
-    str = """
-###Further Information
-
-| Name | Website | [Open Congress](http://www.opencongress.org/) | [Influence Explorer](http://influenceexplorer.com/) | [Party Time](http://politicalpartytime.org/) |
-|:-:|:-:|:-:|:-:|:-:|            
-"""
-    for v in victims:
-        d = v.d 
-        props = [d['lastname']]
-        props.append(link("link",d['website']))
-        props.append(link("link",d['congresspedia_url']))
-        props.append(link("link","http://influenceexplorer.com/search?query="+d['firstname']+"+"+d['lastname']))
-        props.append(link("link","http://politicalpartytime.org/pol/"+d['crp_id']))
-        str += "|"+"|".join(props)+"|\n"
-    return str
-
 MAX_SINGLE=13
 MAX_DISPLAY=17
 
 def add_single_comment(submission,victims):
-    str = basic(victims)+contact(victims)+further(victims)
+    str = basic(victims)+contact(victims)
     str = intro+str+footer.format(commit[0:MAX_SINGLE],commit)
     return handle_ratelimit(submission.add_comment,str)
 
@@ -114,6 +88,6 @@ def add_multiple_comments(submission,victims):
     comment = add_single_comment(submission,victims[0:MAX_SINGLE])
     for i in range(1,int(ceil(len(victims)/float(MAX_DISPLAY)))):
         v = victims[MAX_DISPLAY*i:MAX_DISPLAY*(i+1)]
-        str = contd+basic(v)+contact(v)+further(v)
+        str = contd+basic(v)+contact(v)
         handle_ratelimt(comment.reply,str)
     return comment

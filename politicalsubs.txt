@@ -113,7 +113,6 @@ ProChoice
 ProGun
 Progressive
 ProjectFactCheck
-ProjectOverhaul
 RPAC
 RWB
 RandPaul
