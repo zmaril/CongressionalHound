@@ -82,7 +82,7 @@ args = parser.parse_args()
 
 if args.production:
     warn("RUNNING IN PRODUCTION")
-    subs.append("AnythingGoesNews")
+    subs.extend(["AnythingGoesNews"])
     warn("ON THESE SUBREDDITS: {0}".format(subs))
 
 if __name__ == "__main__":

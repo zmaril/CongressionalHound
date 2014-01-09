@@ -7,7 +7,9 @@ party_url = "http://politicalpartytime.org/pol/"
 commit = subprocess.check_output(["git","rev-parse","HEAD"])[:-1]
 
 intro = """
-[Owoooooooooooooo](https://www.youtube.com/watch?v=mAAoU_ZGt1Q)! I'm a bot that hunts for members of Congress and displays information about them. 
+[Owoooooooooooooo](https://www.youtube.com/watch?v=mAAoU_ZGt1Q)! I'm a
+bot that hunts for members of Congress in submitted articles and
+displays information about them.
 """
 
 footer = """
@@ -27,36 +29,17 @@ def link(text,href):
     else:
         return "[{0}]({1})".format(text,href)
 
-def basic(victims):
+def info(victims):
     str = """
-###Basic Information 
-
-| Name | Gender | Birthdate | Party | Title | Website | [Open Congress](http://www.opencongress.org/) | [Influence Explorer](http://influenceexplorer.com/) | [Party Time](http://politicalpartytime.org/) |
-|:--:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+|Name|Website|[Phone](http://www.callcongressnow.org/)|Twitter|FB|[Open Congress](http://www.opencongress.org/)|[Finances](http://influenceexplorer.com/)|[Fundraising](http://politicalpartytime.org/)|
+|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 """
     for v in victims:
         d = v.d
         fname = d['nickname'] if d['nickname'] != '' else d['firstname']
         name = fname+" "+d['lastname']
-        props = [name,d['gender'],d['birthdate'],d['party'],d['title']]
-        props.append(link("link",d['website']))
-        props.append(link("link",d['congresspedia_url']))
-        props.append(link("link","http://influenceexplorer.com/search?query="+d['firstname']+"+"+d['lastname']))
-        props.append(link("link","http://politicalpartytime.org/pol/"+d['crp_id']))
-        str += "|"+"|".join(props)+"|\n"
-    return str
-    
-def contact(victims):
-    str = """
-###Contact Information
-
-| Name | Contact Form | [Phone](http://www.callcongressnow.org/)|  Twitter | Facebook | Youtube |  Address | 
-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-"""
-    for v in victims:
-        d = v.d 
-        props = [d['lastname']]
-        props.append(link("link",d['webform']))
+        props = [name]
+        props.append(link("link",d['website'])+"/"+link("contact",d['webform']))
         props.append(link(d['phone'],"http://www.callcongressnow.org/profile/"+d['bioguide_id']))
         if d['twitter_id'] != "":
             props.append(link("@"+d['twitter_id'],"http://www.twitter.com/"+d['twitter_id'])) 
@@ -66,9 +49,9 @@ def contact(victims):
             props.append(link("link","http://www.facebook.com/"+d['facebook_id'])) 
         else:
             props.append("N/A")
-
-        props.append(link("link",d['youtube_url']))
-        props.append(d['congress_office'])
+        props.append(link("link",d['congresspedia_url']))
+        props.append(link("link","http://influenceexplorer.com/search?query="+d['firstname']+"+"+d['lastname']))
+        props.append(link("link","http://politicalpartytime.org/pol/"+d['crp_id']))
         str += "|"+"|".join(props)+"|\n"
     return str
 
@@ -76,8 +59,7 @@ MAX_SINGLE=13
 MAX_DISPLAY=17
 
 def add_single_comment(submission,victims):
-    str = basic(victims)+contact(victims)
-    str = intro+str+footer.format(commit[0:MAX_SINGLE],commit)
+    str = intro+info(victims)+footer.format(commit[0:MAX_SINGLE],commit)
     return handle_ratelimit(submission.add_comment,str)
 
 contd = """
@@ -88,6 +70,6 @@ def add_multiple_comments(submission,victims):
     comment = add_single_comment(submission,victims[0:MAX_SINGLE])
     for i in range(1,int(ceil(len(victims)/float(MAX_DISPLAY)))):
         v = victims[MAX_DISPLAY*i:MAX_DISPLAY*(i+1)]
-        str = contd+basic(v)+contact(v)
+        str = contd+info(v)
         handle_ratelimt(comment.reply,str)
     return comment
