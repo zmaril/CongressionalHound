@@ -19,8 +19,8 @@ with open("legislators.csv","rb") as csvfile:
             if l['nickname'] != '':
                 legislators[l['nickname']+l['lastname']]=Legislator(l)
             if (l['firstname'] == "Sheila" and l['lastname'] == "Jackson Lee"):
-                legislators["SheilaJackson"] = l
-                legislators["JacksonLee"]    = l
+                legislators["SheilaJackson"] = Legislator(l)
+                legislators["JacksonLee"]    = Legislator(l)
 def CQ(word):
     return word[0] in string.ascii_uppercase
 
