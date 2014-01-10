@@ -12,15 +12,15 @@ class Legislator:
     def __str__(self):
         return "Legislator: "+self.d['firstname']+self.d['lastname']
 
-#TODO Remove Adam Smith and document him on the wiki. No idea how to
-#differeniate between him and the economist effectively.
 with open("legislators.csv","rb") as csvfile:
     for l in csv.DictReader(csvfile):
         if l['in_office'] == '1' and not (l['firstname'] == "Adam" and l['lastname'] == "Smith"):
             legislators[l['firstname']+l['lastname']]=Legislator(l)
             if l['nickname'] != '':
                 legislators[l['nickname']+l['lastname']]=Legislator(l)
-
+            if (l['firstname'] == "Sheila" and l['lastname'] == "Jackson Lee"):
+                legislators["SheilaJackson"] = l
+                legislators["JacksonLee"]    = l
 def CQ(word):
     return word[0] in string.ascii_uppercase
 
