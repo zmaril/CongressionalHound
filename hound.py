@@ -42,12 +42,13 @@ def get_raw(url):
         fail("BAD STATUS EXCEPTION",url)
         return ""
 
-def clean(token):
-    return token.lower()
-
 def should_comment(tokens):
-    greenflags = ["rep.","representative","sen.","senator","congress","senate","representatives","senators","congressional"]
-    return any(map(lambda x: clean(x) in greenflags,tokens))
+    greenflags = ["rep","representative","sen","senator","congress","senate","representatives","senators","congressional"]
+    return any(map(lambda x: x.lower() in greenflags,tokens))
+
+def tokenize(raw):
+    filtered = filter(lambda x: x.isalnum() or x==" ", raw)
+    return filtered.split()
 
 def crawl_reddit():
     already_done = []
@@ -59,7 +60,7 @@ def crawl_reddit():
                     log("New story: "+sub+" "+submission.short_link+" "+submission.url)
                     already_done.append(submission.id)
                     raw = get_raw(submission.url)+" "+submission.title+" "+submission.selftext
-                    tokens = nltk.word_tokenize(raw)
+                    tokens = tokenize(raw)
                     victims = find_legislators(tokens)
                     if len(victims) is not 0 and should_comment(tokens):
                         success("Found {0} congressfolk!".format(len(victims)))                        
@@ -82,7 +83,7 @@ args = parser.parse_args()
 
 if args.production:
     warn("RUNNING IN PRODUCTION")
-    subs.extend(["AnythingGoesNews"])
+    subs = ["AnythingGoesNews","AmericanPolitics"]
     warn("ON THESE SUBREDDITS: {0}".format(subs))
 
 if __name__ == "__main__":
