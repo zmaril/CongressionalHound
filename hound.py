@@ -46,6 +46,7 @@ def should_comment(tokens):
     greenflags = ["rep","representative","sen","senator","congress","senate","representatives","senators","congressional"]
     return any(map(lambda x: x.lower() in greenflags,tokens))
 
+#TODO "John McCain's" won't work. Strip possesive first? 
 def tokenize(raw):
     filtered = filter(lambda x: x.isalnum() or x==" ", raw)
     return filtered.split()
@@ -83,7 +84,7 @@ args = parser.parse_args()
 
 if args.production:
     warn("RUNNING IN PRODUCTION")
-    subs = ["AnythingGoesNews","AmericanPolitics"]
+    subs = ["AnythingGoesNews","AmericanPolitics","EndlessWar","Sunlight","evolutionReddit","censorship"]
     warn("ON THESE SUBREDDITS: {0}".format(subs))
 
 if __name__ == "__main__":
