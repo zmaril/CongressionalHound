@@ -84,7 +84,7 @@ args = parser.parse_args()
 
 if args.production:
     warn("RUNNING IN PRODUCTION")
-    subs = ["AnythingGoesNews","AmericanPolitics","EndlessWar","Sunlight","evolutionReddit","censorship"]
+    subs = ["AnythingGoesNews","AmericanPolitics","EndlessWar","Sunlight","evolutionReddit","censorship","anarchism"]
     warn("ON THESE SUBREDDITS: {0}".format(subs))
 
 if __name__ == "__main__":
